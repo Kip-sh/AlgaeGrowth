@@ -10,3 +10,9 @@
 # Ignore CSV files
 *.csv
 
+# Ignore venv
+venv/
+
+# Ignore pycache
+*/__pycache__/
+*.pyc
