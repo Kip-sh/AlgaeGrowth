@@ -1,0 +1,12 @@
+# Ignore environment file
+.env
+
+# Ignore Excel files
+*.xlsx
+
+# Ignore PDF files
+*.pdf
+
+# Ignore CSV files
+*.csv
+
