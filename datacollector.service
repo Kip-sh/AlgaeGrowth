@@ -1,0 +1,14 @@
+[Unit]
+Description=ASA Datacollector
+After=network.target
+
+[Service]
+Type=simple
+User=rpi
+WorkingDirectory=/home/rpi/ASA
+ExecStart=/home/rpi/ASA/venv/bin/python main.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
