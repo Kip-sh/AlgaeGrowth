@@ -24,3 +24,11 @@ class ColorimeterMock:
             bytes | Any: Mocked UTF-8 encoded data from colorimeter, in the form of (colorimeter_90, colorimeter_180)
         """
         return f"({randint(0, 90)}, {randint(0, 180)})\n".encode("UTF-8")
+
+    def close(self) -> None:
+        """Close the mock serial connection
+
+        Returns:
+            None: Does nothing, mocked connection has nothing to close
+        """
+        pass

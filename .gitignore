@@ -16,3 +16,7 @@ venv/
 # Ignore pycache
 */__pycache__/
 *.pyc
+
+# Database files
+*.db
+*.sqlite3
