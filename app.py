@@ -4,16 +4,13 @@ from mocks.esp32_mock import Esp32Mock
 from utils.database import DatabaseConnection
 
 import serial
-import json
 import re
 
 from azure.iot.device import IoTHubDeviceClient
-from azure.iot.device import Message
 
-from datetime import datetime
 from dotenv import load_dotenv
 from time import sleep
-from os import getenv, path
+from os import getenv
 
 from utils.log import Logger
 
@@ -176,16 +173,37 @@ def shutdown() -> None:
     print("shutdown complete")
 
 
+def clear_backlog() -> None:
+    """"Retrieve all measurements from the database with sent_to_azure=0 and send them to azure, marking them as sent if successful
+    """
+    if AZURE_ENABLED is False:
+        return
+    
+    print("Clearing backlog...")
+    backlog = database.get_backlog()
+    for row in backlog:
+        try:
+            logger.log(row[1:10], backlog_item=True)
+            database.mark_as_sent(row[0])
+
+        except Exception as e:
+            print(e)
+
+    print("Backlog cleared")
+
+
 if __name__ == "__main__":
     # == General Config ==
     DEBUG = getenv("DEBUG") == "true"
     AZURE_ENABLED = getenv("AZURE_ENABLED") == "true"
     serial_regex = r"\((\d+), (\d+)\)"
-    database = DatabaseConnection(getenv("DATABASEFILE"), getenv("DATABASETABLE"))
 
     # Device handles
     client, colorimeter, esp = get_devices()
+    database = DatabaseConnection(getenv("DATABASEFILE"), getenv("DATABASETABLE"))
     logger = Logger(database, client)
+
+    clear_backlog()
 
     # Monitoring Delay in seconds
     MONITORING_DELAY = getenv("MONITORING_DELAY")

@@ -1,5 +1,6 @@
 import json
-from typing import Any
+
+from datetime import datetime
 
 from azure.iot.device import IoTHubDeviceClient
 from azure.iot.device import Message
@@ -13,17 +14,19 @@ class Logger:
         self.azure_client: IoTHubDeviceClient | None = azure_client
 
 
-    def log(self, values: list[int | float]) -> None:
+    def log(self, values: list[int | float], backlog_item: bool=False) -> None:
         """Log data to log file in the sqlite database
         
         Args:
             values (list[int | float]): List of values to log
+            backlog_item (bool, optional): Whether this log entry is from the backlog and should be sent to azure
         """
-        self.database.insert_measurement(*values)
-        
+        message, timestamp = self.list_to_json(values)
         if self.azure_client:
-            message = self.list_to_json(values)
             self.send_message_to_azure(message)
+
+        if not backlog_item:
+            self.database.insert_measurement(*values[:8], timestamp, sent_to_azure=1 if self.azure_client else 0)
 
 
     def send_message_to_azure(self, azure_message):
@@ -41,7 +44,10 @@ class Logger:
             pass
 
 
-    def list_to_json(self, values: list[int | float]) -> str:
+    def list_to_json(self, values: list[int | float]) -> tuple[str, str]:
+        if len(values) != 9:
+            values.append(str(datetime.now()))
+            
         data = {
             "lux_intensity": float(values[0]),
             "ph": float(values[1]),
@@ -54,4 +60,4 @@ class Logger:
             "rasp_timestamp": values[8]
         }
 
-        return json.dumps(data)
+        return json.dumps(data), values[8]
