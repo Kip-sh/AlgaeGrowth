@@ -64,22 +64,27 @@ def get_devices() -> tuple[IoTHubDeviceClient | None, serial.Serial | Colorimete
 
 def read_from_esp32() -> list[int | float] | None:
     """Read data from the ESP32 serial port, convert from csv to python list with correct data types
-    
+
     Args:
         None
 
     Returns:
         list[int | float] | None: List of values received from the esp or None if no data recieved/errored
     """
+    espregex = r"[eE0-9.\+-,]+"
+
     try:
         esp.reset_input_buffer()
         data = esp.readline().decode("UTF-8").strip()
 
         if not data:
             return None
-        
+
+        if not bool(re.fullmatch(espregex, data)):
+            return None
+
         return convert_esp_types(data.split(","))
-        
+
     except Exception as e:
         print(e)
         return None
@@ -93,13 +98,14 @@ def read_from_colorimeter() -> list[int] | None:
     Returns:
         list[int] | None: List of integers received from the colorimeter or None if no data recieved/errored
     """
+    colregex = r"\((\d+), (\d+)\)"
     try:
         colorimeter.reset_input_buffer()
         data = colorimeter.readline().decode("UTF-8").strip()
 
         if not data:
             return None
-        colorimeter_data_grouped = re.search(serial_regex, data, re.MULTILINE)
+        colorimeter_data_grouped = re.search(colregex, data, re.MULTILINE)
 
         if not colorimeter_data_grouped:
             return None
@@ -147,13 +153,13 @@ def main():
             assert espdata is not None
             assert coldata is not None
 
+            fulldata = espdata[:4] + coldata + espdata[4:]
+            logger.log(fulldata)
+            print(f"Stored data: {fulldata}")
+
         except AssertionError:
             print("No data received from one of the devices")
             print(f"ESP32 data: {espdata} | Colorimeter data: {coldata}")
-
-        fulldata = espdata[:4] + coldata + espdata[4:]
-        logger.log(fulldata)
-        print(f"Stored data: {fulldata}")
 
         sleep(int(MONITORING_DELAY))
 
@@ -196,7 +202,6 @@ if __name__ == "__main__":
     # == General Config ==
     DEBUG = getenv("DEBUG") == "true"
     AZURE_ENABLED = getenv("AZURE_ENABLED") == "true"
-    serial_regex = r"\((\d+), (\d+)\)"
 
     # Device handles
     client, colorimeter, esp = get_devices()

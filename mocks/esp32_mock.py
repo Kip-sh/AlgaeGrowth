@@ -28,8 +28,7 @@ class Esp32Mock:
         Returns:
             bytes | Any: Mocked UTF-8 encoded data from ESP32
         """
-        return f"{uniform(20.0, 30.0):.2f},{uniform(0.0, 14.0)},{randint(10, 30)},\
-                {uniform(0.0, 100.0)},{randint(0, 180)},{randint(0, 180)}\n".encode("UTF-8")
+        return f"{uniform(20.0, 30.0):.2f},{uniform(0.0, 14.0)},{randint(10, 30)},{uniform(0.0, 100.0)},{randint(0, 180)},{randint(0, 180)}\n".encode("UTF-8")
 
     def close(self) -> None:
         """Close the mock serial connection
