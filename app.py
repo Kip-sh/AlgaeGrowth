@@ -38,22 +38,32 @@ def get_devices() -> tuple[IoTHubDeviceClient | None, serial.Serial | Colorimete
     else:
         client = None
 
-    if not DEBUG:
-        
-        # == Colorimeter Config ==
-        # (x, y)
-        colorimeter = serial.Serial(
-            port=getenv("COLPORT"),
-            baudrate=getenv("COLBAUD_RATE"),
-            timeout=2
-        )
+    colorimeter: serial.Serial | ColorimeterMock = None
+    esp: serial.Serial | Esp32Mock = None
 
-        # == ESP32 Config ==
-        esp = serial.Serial(
-            port=getenv("ESPPORT"),
-            baudrate=getenv("ESPBAUD_RATE"),
-            timeout=2
-        )
+    if not DEBUG:
+        while colorimeter is None or esp is None:
+            try:
+                # Try to connect to both devices until successful
+                # == Colorimeter Config ==
+                # (x, y)
+                if colorimeter is None:
+                    colorimeter = serial.Serial(
+                        port=getenv("COLPORT"),
+                        baudrate=getenv("COLBAUD_RATE"),
+                        timeout=2
+                    )
+
+                # == ESP32 Config ==
+                if esp is None:
+                    esp = serial.Serial(
+                        port=getenv("ESPPORT"),
+                        baudrate=getenv("ESPBAUD_RATE"),
+                        timeout=2
+                    )
+            except:
+                print("Not all devices connected, retrying in 5 seconds")
+                sleep(5)
 
     else:
         colorimeter = ColorimeterMock()
