@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=rpi
-WorkingDirectory=/home/rpi/ASA
-ExecStart=/home/rpi/ASA/venv/bin/python main.py
+WorkingDirectory=/home/rpi/AlgaeGrowth
+ExecStart=/home/rpi/AlgaeGrowth/venv/bin/python app.py
 Restart=always
 RestartSec=5
 
