@@ -14,8 +14,6 @@ from os import getenv
 
 from utils.log import Logger
 
-previous_data = None
-
 load_dotenv()
 
 
@@ -100,11 +98,7 @@ def read_from_esp32() -> list[int | float] | None:
         data = esp.readline().decode("UTF-8").strip()
 
         if not data:
-            data = previous_data
-            if data is None:
-                return None
-            
-            previous_data = data
+            return None
 
         if not bool(re.fullmatch(espregex, data)):
             return None
@@ -162,12 +156,12 @@ def convert_esp_types(espdata: list[str]) -> list[int | float]:
         list[int | float]: List of converted data to the correct types 
     """
     return [
-        float(espdata[0]) if espdata[0] != "null" else None,
-        float(espdata[1]) if espdata[1] != "null" else None,
-        int(espdata[2]) if espdata[2] != "null" else None,
-        float(espdata[3]) if espdata[3] != "null" else None,
-        int(espdata[4]) if espdata[4] != "null" else None,
-        int(espdata[5]) if espdata[5] != "null" else None
+        float(espdata[0]) if espdata[0] != "null" else -1,
+        float(espdata[1]) if espdata[1] != "null" else -1,
+        float(espdata[2]) if espdata[2] != "null" else -1,
+        float(espdata[3]) if espdata[3] != "null" else -1,
+        float(espdata[4]) if espdata[4] != "null" else -1,
+        float(espdata[5]) if espdata[5] != "null" else -1
     ]
 
 
