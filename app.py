@@ -14,7 +14,7 @@ from os import getenv
 
 from utils.log import Logger
 
-
+previous_data = None
 
 load_dotenv()
 
@@ -31,10 +31,22 @@ def get_devices() -> tuple[IoTHubDeviceClient | None, serial.Serial | Colorimete
                 Azure client, colorimeter connection, esp32 connection
     """
     if AZURE_ENABLED:
-        # == Azure Config ==
-        CONNECTION_STRING = getenv("PRIMARY_CONNECTION_STRING")
-        client = IoTHubDeviceClient.create_from_connection_string(CONNECTION_STRING)
-        client.connect()
+        attempt = 0
+        while True:
+            try:
+                client = IoTHubDeviceClient.create_from_connection_string(getenv("PRIMARY_CONNECTION_STRING"))
+                client.connect()
+                print("Connected to Azure IoT Hub")
+                break
+            except Exception as e:
+                attempt += 1
+                if attempt >= 10:
+                    client=None
+                    print("Failed to connect to Azure IoT Hub after 10 attempts, continuing without Azure connection")
+                    break
+                print(f"Failed to connect to Azure IoT Hub: {e}")
+                print("Retrying in 5 seconds...")
+                sleep(5)
     else:
         client = None
 
@@ -88,10 +100,15 @@ def read_from_esp32() -> list[int | float] | None:
         data = esp.readline().decode("UTF-8").strip()
 
         if not data:
-            return None
+            data = previous_data
+            if data is None:
+                return None
+            
+            previous_data = data
 
         if not bool(re.fullmatch(espregex, data)):
             return None
+
 
         return convert_esp_types(data.split(","))
 
